@@ -59,17 +59,17 @@ func Test_scanToken(t *testing.T) {
 func Test_Scan(t *testing.T) {
 	input := " ( ) empty z ZM M POINT 3.14 12   , "
 	output := []Token{
-		{ttype: LeftParen, lexeme: "("},
-		{ttype: RightParen, lexeme: ")"},
-		{ttype: Empty, lexeme: "empty"},
-		{ttype: Z, lexeme: "z"},
-		{ttype: ZM, lexeme: "zm"},
-		{ttype: M, lexeme: "m"},
-		{ttype: Point, lexeme: "point"},
-		{ttype: Float, lexeme: "3.14"},
-		{ttype: Float, lexeme: "12"},
-		{ttype: Comma, lexeme: ","},
-		{ttype: Eof, lexeme: ""},
+		{ttype: LeftParen, lexeme: "(", pos: 1},
+		{ttype: RightParen, lexeme: ")", pos: 3},
+		{ttype: Empty, lexeme: "empty", pos: 5},
+		{ttype: Z, lexeme: "z", pos: 11},
+		{ttype: ZM, lexeme: "zm", pos: 13},
+		{ttype: M, lexeme: "m", pos: 16},
+		{ttype: Point, lexeme: "point", pos: 18},
+		{ttype: Float, lexeme: "3.14", pos: 24},
+		{ttype: Float, lexeme: "12", pos: 29},
+		{ttype: Comma, lexeme: ",", pos: 34},
+		{ttype: Eof, lexeme: "", pos: 36},
 	}
 
 	l := NewLexer(strings.NewReader(input))
@@ -88,6 +88,9 @@ func Test_Scan(t *testing.T) {
 		}
 		if token.lexeme != output[i].lexeme {
 			t.Errorf("incorrect lexeme for token %d", i)
+		}
+		if token.pos != output[i].pos {
+			t.Errorf("incorrect position for token %d", i)
 		}
 	}
 }
