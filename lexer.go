@@ -122,54 +122,54 @@ func (l *Lexer) scanToken() (bool, error) {
 	case unicode.IsSpace(r):
 		l.pos++
 	case r == '(':
-		l.pos++
 		l.addToken(LeftParen, "(")
+		l.pos++
 	case r == ')':
-		l.pos++
 		l.addToken(RightParen, ")")
-	case r == ',':
 		l.pos++
+	case r == ',':
 		l.addToken(Comma, ",")
+		l.pos++
 	case unicode.IsLetter(r):
 		w := l.scanToLowerWord(r)
 		switch w {
 		case "empty":
-			l.pos = l.pos + 5
 			l.addToken(Empty, "empty")
-		case "z":
-			l.pos++
-			l.addToken(Z, "z")
-		case "m":
-			l.pos++
-			l.addToken(M, "m")
-		case "zm":
-			l.pos = l.pos + 2
-			l.addToken(ZM, "zm")
-		case "point":
 			l.pos = l.pos + 5
+		case "z":
+			l.addToken(Z, "z")
+			l.pos++
+		case "m":
+			l.addToken(M, "m")
+			l.pos++
+		case "zm":
+			l.addToken(ZM, "zm")
+			l.pos = l.pos + 2
+		case "point":
 			l.addToken(Point, "point")
+			l.pos = l.pos + 5
 		case "linestring":
-			l.pos = l.pos + 10
 			l.addToken(Linestring, "linestring")
-		case "polygon":
-			l.pos = l.pos + 7
-			l.addToken(Polygon, "polygon")
-		case "multipoint":
 			l.pos = l.pos + 10
+		case "polygon":
+			l.addToken(Polygon, "polygon")
+			l.pos = l.pos + 7
+		case "multipoint":
 			l.addToken(Multipoint, "multipoint")
+			l.pos = l.pos + 10
 		case "multilinestring":
-			l.pos = l.pos + 15
 			l.addToken(MultilineString, "multilinestring")
+			l.pos = l.pos + 15
 		case "multipolygon":
-			l.pos = l.pos + 12
 			l.addToken(MultiPolygon, "multipolygon")
+			l.pos = l.pos + 12
 		default:
 			return false, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
 		}
 	case unicode.IsNumber(r):
 		w := l.scanFloat(r)
-		l.pos = l.pos + len(w)
 		l.addToken(Float, w)
+		l.pos = l.pos + len(w)
 	case r == eof:
 		l.addToken(Eof, "")
 		return false, nil

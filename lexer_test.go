@@ -50,6 +50,9 @@ func Test_scanToken(t *testing.T) {
 		if l.scanned[0].lexeme != outputs[i].lexeme {
 			t.Errorf("incorrect lexeme for %s", input)
 		}
+		if l.scanned[0].pos != 0 {
+			t.Errorf("incorrect position for %s", input)
+		}
 	}
 }
 
