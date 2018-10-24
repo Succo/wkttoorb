@@ -64,6 +64,7 @@ func NewLexer(reader io.Reader) *Lexer {
 func (l *Lexer) addToken(ttype tokenType, lexeme string) {
 	t := Token{ttype, lexeme, l.pos}
 	l.scanned = append(l.scanned, t)
+	l.pos += len(lexeme)
 }
 
 func (l *Lexer) read() rune {
@@ -123,53 +124,39 @@ func (l *Lexer) scanToken() (bool, error) {
 		l.pos++
 	case r == '(':
 		l.addToken(LeftParen, "(")
-		l.pos++
 	case r == ')':
 		l.addToken(RightParen, ")")
-		l.pos++
 	case r == ',':
 		l.addToken(Comma, ",")
-		l.pos++
 	case unicode.IsLetter(r):
 		w := l.scanToLowerWord(r)
 		switch w {
 		case "empty":
 			l.addToken(Empty, "empty")
-			l.pos = l.pos + 5
 		case "z":
 			l.addToken(Z, "z")
-			l.pos++
 		case "m":
 			l.addToken(M, "m")
-			l.pos++
 		case "zm":
 			l.addToken(ZM, "zm")
-			l.pos = l.pos + 2
 		case "point":
 			l.addToken(Point, "point")
-			l.pos = l.pos + 5
 		case "linestring":
 			l.addToken(Linestring, "linestring")
-			l.pos = l.pos + 10
 		case "polygon":
 			l.addToken(Polygon, "polygon")
-			l.pos = l.pos + 7
 		case "multipoint":
 			l.addToken(Multipoint, "multipoint")
-			l.pos = l.pos + 10
 		case "multilinestring":
 			l.addToken(MultilineString, "multilinestring")
-			l.pos = l.pos + 15
 		case "multipolygon":
 			l.addToken(MultiPolygon, "multipolygon")
-			l.pos = l.pos + 12
 		default:
 			return false, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
 		}
 	case unicode.IsNumber(r):
 		w := l.scanFloat(r)
 		l.addToken(Float, w)
-		l.pos = l.pos + len(w)
 	case r == eof:
 		l.addToken(Eof, "")
 		return false, nil
