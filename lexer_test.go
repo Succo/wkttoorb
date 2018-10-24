@@ -16,6 +16,7 @@ func Test_scanToken(t *testing.T) {
 		"POINT",
 		"3.14",
 		"12",
+		",",
 	}
 
 	outputs := []Token{
@@ -28,6 +29,7 @@ func Test_scanToken(t *testing.T) {
 		{ttype: Point, lexeme: "point"},
 		{ttype: Float, lexeme: "3.14"},
 		{ttype: Float, lexeme: "12"},
+		{ttype: Comma, lexeme: ","},
 	}
 
 	for i, input := range inputs {
@@ -52,7 +54,7 @@ func Test_scanToken(t *testing.T) {
 }
 
 func Test_Scan(t *testing.T) {
-	input := " ( ) empty z ZM M POINT 3.14 12 "
+	input := " ( ) empty z ZM M POINT 3.14 12   , "
 	output := []Token{
 		{ttype: LeftParen, lexeme: "("},
 		{ttype: RightParen, lexeme: ")"},
@@ -63,6 +65,7 @@ func Test_Scan(t *testing.T) {
 		{ttype: Point, lexeme: "point"},
 		{ttype: Float, lexeme: "3.14"},
 		{ttype: Float, lexeme: "12"},
+		{ttype: Comma, lexeme: ","},
 		{ttype: Eof, lexeme: ""},
 	}
 

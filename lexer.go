@@ -14,6 +14,7 @@ const (
 	// Separator
 	LeftParen tokenType = iota
 	RightParen
+	Comma
 
 	// Keyword
 	Empty
@@ -126,6 +127,9 @@ func (l *Lexer) scanToken() (bool, error) {
 	case r == ')':
 		l.pos++
 		l.addToken(RightParen, ")")
+	case r == ',':
+		l.pos++
+		l.addToken(Comma, ",")
 	case unicode.IsLetter(r):
 		w := l.scanToLowerWord(r)
 		switch w {
