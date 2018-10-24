@@ -112,16 +112,14 @@ func (l *Lexer) scanFloat(r rune) string {
 	return buf.String()
 }
 
-// scan scans the next lexeme
+// scanToken scans the next lexeme
 // return false is eof is reached true otherwise
 // error is non nil only in case of unexpected character or word
-func (l *Lexer) scan() (bool, error) {
+func (l *Lexer) scanToken() (bool, error) {
 	r := l.read()
 	switch {
 	case unicode.IsSpace(r):
 		l.pos++
-	case r == eof:
-		l.addToken(Eof, "")
 	case r == '(':
 		l.pos++
 		l.addToken(LeftParen, "(")
@@ -168,8 +166,24 @@ func (l *Lexer) scan() (bool, error) {
 		w := l.scanFloat(r)
 		l.pos = l.pos + len(w)
 		l.addToken(Float, w)
+	case r == eof:
+		l.addToken(Eof, "")
+		return false, nil
 	default:
 		return false, fmt.Errorf("Unexpected rune %s on character %d", string(r), l.pos)
 	}
 	return true, nil
+}
+
+func (l *Lexer) Scan() error {
+	for {
+		ok, err := l.scanToken()
+		switch {
+		case ok:
+		case err != nil:
+			return err
+		default:
+			return nil
+		}
+	}
 }
