@@ -50,52 +50,39 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 	switch t.ttype {
 	case Empty:
 		point = orb.Point{0, 0}
-		goto EofParse
-	case Z:
-		t := p.pop()
-		if t.ttype == Empty {
+	case Z, M, ZM:
+		t1 := p.pop()
+		if t1.ttype == Empty {
 			point = orb.Point{0, 0}
-			goto EofParse
+			break
 		}
-		if t.ttype != LeftParen {
+		if t1.ttype != LeftParen {
 			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 		}
-		point, err = p.parseZCoord()
-	case M:
-		t := p.pop()
-		if t.ttype == Empty {
-			point = orb.Point{0, 0}
-			goto EofParse
-		}
-		if t.ttype != LeftParen {
-			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
-		}
-		point, err = p.parseMCoord()
-	case ZM:
-		t := p.pop()
-		if t.ttype == Empty {
-			point = orb.Point{0, 0}
-			goto EofParse
-		}
-		if t.ttype != LeftParen {
-			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
-		}
-		point, err = p.parseZMCoord()
+		fallthrough
 	case LeftParen:
-		point, err = p.parseCoord()
+		switch t.ttype { // reswitch on the type because of the fallthrough
+		case Z:
+			point, err = p.parseZCoord()
+		case M:
+			point, err = p.parseMCoord()
+		case ZM:
+			point, err = p.parseZMCoord()
+		default:
+			point, err = p.parseCoord()
+		}
+		if err != nil {
+			return point, err
+		}
+
+		t = p.pop()
+		if t.ttype != RightParen {
+			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
+		}
 	default:
 		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 	}
 
-	if err != nil {
-		return point, err
-	}
-
-	t = p.pop()
-	if t.ttype != RightParen {
-		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
-	}
-EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
 		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
