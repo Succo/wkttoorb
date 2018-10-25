@@ -37,12 +37,17 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 	case Polygon:
 		return p.parsePolygon()
 	case Multipoint:
-		l, err := p.parseLineString()
-		return orb.MultiPoint(l), err
-	//case MultilineString:
-	//	return p.parseMultilinestring()
-	//case MultiPolygon:
-	//	return p.parseMultiPolygon()
+		line, err := p.parseLineString()
+		return orb.MultiPoint(line), err
+	case MultilineString:
+		poly, err := p.parsePolygon()
+		multiline := make(orb.MultiLineString, 0, len(poly))
+		for _, ring := range poly {
+			multiline = append(multiline, orb.LineString(ring))
+		}
+		return multiline, err
+	// case MultiPolygon:
+	// 	return p.parseMultiPolygon()
 	default:
 		return nil, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
