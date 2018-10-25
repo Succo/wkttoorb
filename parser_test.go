@@ -150,7 +150,7 @@ func Test_parseMultipoint(t *testing.T) {
 	}
 }
 
-func Test_parseMultiLigneString(t *testing.T) {
+func Test_parseMultiLineString(t *testing.T) {
 	inputs := []string{
 		"multilinestring empty",
 		"multilinestring z empty",
@@ -184,6 +184,46 @@ func Test_parseMultiLigneString(t *testing.T) {
 		if !reflect.DeepEqual(geo, outputs[i]) {
 			t.Errorf("incorrect value returned on test %d", i)
 			fmt.Println(geo)
+		}
+	}
+}
+
+func Test_parseMultiPolygon(t *testing.T) {
+	inputs := []string{
+		"multipolygon empty",
+		"multipolygon z empty",
+		"multipolygon m empty",
+		"multipolygon zm empty",
+		"multipolygon (((10 10, 10 20, 20 20, 20 15 , 10 10), (50 40, 50 50, 60 50, 60 40, 50 40)))",
+		"multipolygon z (((10 10 7, 10 20 8, 20 20 7, 20 15 5, 10 10 7), (50 40 6, 50 50 6, 60 50 5, 60 40 6, 50 40 7)))",
+		"multipolygon m (((10 10 2, 10 20 3, 20 20 4, 20 15 5, 10 10 2), (50 40 7, 50 50 3, 60 50 4, 60 40 5, 50 40 7)))",
+		"multipolygon zm (((10 10 7 2, 10 20 8 3, 20 20 7 4, 20 15 5 5, 10 10 7 2), (50 40 6 7, 50 50 6 3, 60 50 5 4, 60 40 6 5, 50 40 7 7)))",
+	}
+	outputs := []orb.MultiPolygon{
+		orb.MultiPolygon{},
+		orb.MultiPolygon{},
+		orb.MultiPolygon{},
+		orb.MultiPolygon{},
+		orb.MultiPolygon{{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10, 10}},
+			{{50.0, 40.0}, {50.0, 50.0}, {60.0, 50.0}, {60.0, 40.0}, {50.0, 40.0}}}},
+		orb.MultiPolygon{{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10, 10}},
+			{{50.0, 40.0}, {50.0, 50.0}, {60.0, 50.0}, {60.0, 40.0}, {50.0, 40.0}}}},
+		orb.MultiPolygon{{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10, 10}},
+			{{50.0, 40.0}, {50.0, 50.0}, {60.0, 50.0}, {60.0, 40.0}, {50.0, 40.0}}}},
+		orb.MultiPolygon{{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10, 10}},
+			{{50.0, 40.0}, {50.0, 50.0}, {60.0, 50.0}, {60.0, 40.0}, {50.0, 40.0}}}},
+	}
+
+	for i, str := range inputs {
+		geo, err := Scan(str)
+
+		if err != nil {
+			t.Errorf("unexpected error %s on test %d", err, i)
+		}
+		if !reflect.DeepEqual(geo, outputs[i]) {
+			t.Errorf("incorrect value returned on test %d", i)
+			fmt.Println(geo)
+			fmt.Println(outputs[i])
 		}
 	}
 }

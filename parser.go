@@ -46,8 +46,8 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 			multiline = append(multiline, orb.LineString(ring))
 		}
 		return multiline, err
-	// case MultiPolygon:
-	// 	return p.parseMultiPolygon()
+	case MultiPolygon:
+		return p.parseMultiPolygon()
 	default:
 		return nil, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
@@ -231,6 +231,62 @@ func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error)
 		}
 	}
 	return poly, nil
+}
+
+func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
+	multi = make([]orb.Polygon, 0)
+	t := p.pop()
+	switch t.ttype {
+	case Empty:
+		goto EofParse
+	case Z, M, ZM:
+		t1 := p.pop()
+		if t1.ttype == Empty {
+			goto EofParse
+		}
+		if t1.ttype != LeftParen {
+			return multi, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
+		}
+		fallthrough
+	case LeftParen:
+		multi, err = p.parseMultiPolygonText(t.ttype)
+		if err != nil {
+			return multi, err
+		}
+	default:
+		return multi, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
+	}
+
+EofParse:
+	t = p.pop()
+	if t.ttype != Eof {
+		return multi, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
+	}
+
+	return multi, nil
+}
+
+func (p *Parser) parseMultiPolygonText(ttype tokenType) (multi orb.MultiPolygon, err error) {
+	multi = make([]orb.Polygon, 0)
+	var poly orb.Polygon
+	for {
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return multi, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
+		}
+		poly, err = p.parsePolygonText(ttype)
+		if err != nil {
+			return multi, err
+		}
+		multi = append(multi, poly)
+		t = p.pop()
+		if t.ttype == RightParen {
+			break
+		} else if t.ttype != Comma {
+			return multi, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+		}
+	}
+	return multi, nil
 }
 
 func (p *Parser) parseCoord() (point orb.Point, err error) {
