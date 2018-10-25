@@ -114,3 +114,38 @@ func Test_parsePolygon(t *testing.T) {
 		}
 	}
 }
+
+func Test_parseMultipoint(t *testing.T) {
+	inputs := []string{
+		"MULTIPOINT EMPTY",
+		"MULTIPOINT M EMPTY",
+		"MULTIPOINT Z EMPTY",
+		"MULTIPOINT ZM EMPTY",
+		" multipoint ( 10.05  10.28 , 20.95  20.89 )",
+		"multipoint z ( 10.05 10.28 3.09, 20.95 31.98 4.72, 21.98 29.80 3.51 )",
+		"multipoint m ( 10.05 10.28 5.84, 20.95 31.98 9.01, 21.98 29.80 12.84 )",
+		"multipoint zm (10.05 10.28 3.09 5.84, 20.95 31.98 4.72 9.01, 21.98 29.80 3.51 12.84)",
+	}
+	outputs := []orb.MultiPoint{
+		orb.MultiPoint{},
+		orb.MultiPoint{},
+		orb.MultiPoint{},
+		orb.MultiPoint{},
+		orb.MultiPoint{{10.05, 10.28}, {20.95, 20.89}},
+		orb.MultiPoint{{10.05, 10.28}, {20.95, 31.98}, {21.98, 29.80}},
+		orb.MultiPoint{{10.05, 10.28}, {20.95, 31.98}, {21.98, 29.80}},
+		orb.MultiPoint{{10.05, 10.28}, {20.95, 31.98}, {21.98, 29.80}},
+	}
+
+	for i, str := range inputs {
+		geo, err := Scan(str)
+
+		if err != nil {
+			t.Errorf("unexpected error %s on test %d", err, i)
+		}
+		if !reflect.DeepEqual(geo, outputs[i]) {
+			t.Errorf("incorrect value returned on test %d", i)
+			fmt.Println(geo)
+		}
+	}
+}

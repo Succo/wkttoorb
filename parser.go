@@ -36,8 +36,9 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 		return p.parseLineString()
 	case Polygon:
 		return p.parsePolygon()
-	//case Multipoint:
-	//	return p.parseMultipoint()
+	case Multipoint:
+		l, err := p.parseLineString()
+		return orb.MultiPoint(l), err
 	//case MultilineString:
 	//	return p.parseMultilinestring()
 	//case MultiPolygon:
