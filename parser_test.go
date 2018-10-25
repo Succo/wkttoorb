@@ -8,21 +8,29 @@ import (
 )
 
 func Test_parsePoint(t *testing.T) {
-	geo, err := Scan("POINT ( 10.05  10.28 )")
-
-	if err != nil {
-		t.Errorf("unexpected error %s", err)
+	inputs := []string{
+		"POINT ( 10.05  10.28 )",
+		"POINT empty",
+		"POINT Z ( 79.1 21.28 12.6 )",
+		"POINT M ( 79.1 21.28 12.6 )",
+		"POINT ZM ( 79.1 21.28 12.6 34.6 )",
 	}
-	if !reflect.DeepEqual(geo, orb.Point{10.05, 10.28}) {
-		t.Error("incorrect value returned")
+	outputs := []orb.Point{
+		orb.Point{10.05, 10.28},
+		orb.Point{0, 0},
+		orb.Point{79.1, 21.28},
+		orb.Point{79.1, 21.28},
+		orb.Point{79.1, 21.28},
 	}
 
-	geo, err = Scan("POINT empty")
+	for i, str := range inputs {
+		geo, err := Scan(str)
 
-	if err != nil {
-		t.Errorf("unexpected error %s", err)
-	}
-	if !reflect.DeepEqual(geo, orb.Point{0, 0}) {
-		t.Error("incorrect value returned")
+		if err != nil {
+			t.Errorf("unexpected error %s", err)
+		}
+		if !reflect.DeepEqual(geo, outputs[i]) {
+			t.Error("incorrect value returned")
+		}
 	}
 }

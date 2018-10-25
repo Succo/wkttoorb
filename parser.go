@@ -57,12 +57,24 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
 		}
 		return point, nil
-	//case Z:
-	//	point, err = p.parseZCoord()
-	//case M:
-	//	point, err = p.parseMCoord()
-	//case ZM:
-	//	point, err = p.parseZMCoord()
+	case Z:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		point, err = p.parseZCoord()
+	case M:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		point, err = p.parseMCoord()
+	case ZM:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		point, err = p.parseZMCoord()
 	case LeftParen:
 		point, err = p.parseCoord()
 	default:
@@ -133,4 +145,42 @@ func (p *Parser) parseCoord() (point orb.Point, err error) {
 	}
 
 	return orb.Point{c1, c2}, nil
+}
+
+func (p *Parser) parseZCoord() (point orb.Point, err error) {
+	point, err = p.parseCoord()
+	if err != nil {
+		return point, err
+	}
+
+	// drop the last value Z coordinates are not really supported
+	p.pop()
+
+	return point, nil
+}
+
+func (p *Parser) parseMCoord() (point orb.Point, err error) {
+	point, err = p.parseCoord()
+	if err != nil {
+		return point, err
+	}
+
+	// drop the last value M values are not really supported
+	p.pop()
+
+	return point, nil
+}
+
+func (p *Parser) parseZMCoord() (point orb.Point, err error) {
+	point, err = p.parseCoord()
+	if err != nil {
+		return point, err
+	}
+
+	// drop the last value M values
+	// and Z coordinates are not really supported
+	p.pop()
+	p.pop()
+
+	return point, nil
 }
