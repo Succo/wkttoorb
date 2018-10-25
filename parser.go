@@ -109,11 +109,10 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 	t := p.pop()
 	switch t.ttype {
 	case Empty:
-		goto EofParse
 	case Z, M, ZM:
 		t1 := p.pop()
 		if t1.ttype == Empty {
-			goto EofParse
+			break
 		}
 		if t1.ttype != LeftParen {
 			return line, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
@@ -128,11 +127,6 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		return line, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-	if err != nil {
-		return line, err
-	}
-
-EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
 		return line, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
@@ -174,11 +168,10 @@ func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
 	t := p.pop()
 	switch t.ttype {
 	case Empty:
-		goto EofParse
 	case Z, M, ZM:
 		t1 := p.pop()
 		if t1.ttype == Empty {
-			goto EofParse
+			break
 		}
 		if t1.ttype != LeftParen {
 			return poly, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
@@ -193,7 +186,6 @@ func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
 		return poly, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
 		return poly, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
@@ -230,11 +222,10 @@ func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
 	t := p.pop()
 	switch t.ttype {
 	case Empty:
-		goto EofParse
 	case Z, M, ZM:
 		t1 := p.pop()
 		if t1.ttype == Empty {
-			goto EofParse
+			break
 		}
 		if t1.ttype != LeftParen {
 			return multi, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
@@ -249,7 +240,6 @@ func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
 		return multi, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
 		return multi, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
