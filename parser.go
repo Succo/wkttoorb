@@ -115,16 +115,23 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 	t := p.pop()
 	switch t.ttype {
 	case Empty:
+		goto EofParse
 	case Z:
 		t := p.pop()
+		if t.ttype == Empty {
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
-			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return line, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
 		}
 		var point orb.Point
 		for {
 			t := p.peak()
 			if t.ttype == RightParen {
 				break
+			}
+			if t.ttype == Comma {
+				p.pop()
 			}
 			point, err = p.parseZCoord()
 			if err != nil {
@@ -134,14 +141,20 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		}
 	case M:
 		t := p.pop()
+		if t.ttype == Empty {
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
-			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return line, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
 		}
 		var point orb.Point
 		for {
 			t := p.peak()
 			if t.ttype == RightParen {
 				break
+			}
+			if t.ttype == Comma {
+				p.pop()
 			}
 			point, err = p.parseMCoord()
 			if err != nil {
@@ -151,14 +164,20 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		}
 	case ZM:
 		t := p.pop()
+		if t.ttype == Empty {
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
-			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return line, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
 		}
 		var point orb.Point
 		for {
 			t := p.peak()
 			if t.ttype == RightParen {
 				break
+			}
+			if t.ttype == Comma {
+				p.pop()
 			}
 			point, err = p.parseZMCoord()
 			if err != nil {
@@ -167,15 +186,14 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 			line = append(line, point)
 		}
 	case LeftParen:
-		t := p.pop()
-		if t.ttype != LeftParen {
-			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
-		}
 		var point orb.Point
 		for {
 			t := p.peak()
 			if t.ttype == RightParen {
 				break
+			}
+			if t.ttype == Comma {
+				p.pop()
 			}
 			point, err = p.parseCoord()
 			if err != nil {
@@ -188,10 +206,15 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 	if err != nil {
 		return line, err
 	}
+	t = p.pop()
+	if t.ttype != RightParen {
+		return line, fmt.Errorf("unexpected token %s on pos %d expected ')'", t.lexeme, t.pos)
+	}
 
+EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
-		return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+		return line, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
 	}
 
 	return line, nil
