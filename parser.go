@@ -126,18 +126,17 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		}
 		var point orb.Point
 		for {
-			t := p.peak()
-			if t.ttype == RightParen {
-				break
-			}
-			if t.ttype == Comma {
-				p.pop()
-			}
 			point, err = p.parseZCoord()
 			if err != nil {
 				return line, err
 			}
 			line = append(line, point)
+			t := p.pop()
+			if t.ttype == RightParen {
+				break
+			} else if t.ttype != Comma {
+				return line, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+			}
 		}
 	case M:
 		t := p.pop()
@@ -149,18 +148,17 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		}
 		var point orb.Point
 		for {
-			t := p.peak()
-			if t.ttype == RightParen {
-				break
-			}
-			if t.ttype == Comma {
-				p.pop()
-			}
 			point, err = p.parseMCoord()
 			if err != nil {
 				return line, err
 			}
 			line = append(line, point)
+			t := p.pop()
+			if t.ttype == RightParen {
+				break
+			} else if t.ttype != Comma {
+				return line, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+			}
 		}
 	case ZM:
 		t := p.pop()
@@ -172,43 +170,37 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		}
 		var point orb.Point
 		for {
-			t := p.peak()
-			if t.ttype == RightParen {
-				break
-			}
-			if t.ttype == Comma {
-				p.pop()
-			}
 			point, err = p.parseZMCoord()
 			if err != nil {
 				return line, err
 			}
 			line = append(line, point)
+			t := p.pop()
+			if t.ttype == RightParen {
+				break
+			} else if t.ttype != Comma {
+				return line, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+			}
 		}
 	case LeftParen:
 		var point orb.Point
 		for {
-			t := p.peak()
-			if t.ttype == RightParen {
-				break
-			}
-			if t.ttype == Comma {
-				p.pop()
-			}
 			point, err = p.parseCoord()
 			if err != nil {
 				return line, err
 			}
 			line = append(line, point)
+			t := p.pop()
+			if t.ttype == RightParen {
+				break
+			} else if t.ttype != Comma {
+				return line, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+			}
 		}
 	}
 
 	if err != nil {
 		return line, err
-	}
-	t = p.pop()
-	if t.ttype != RightParen {
-		return line, fmt.Errorf("unexpected token %s on pos %d expected ')'", t.lexeme, t.pos)
 	}
 
 EofParse:
