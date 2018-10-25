@@ -19,6 +19,10 @@ func (p *Parser) pop() Token {
 	return t
 }
 
+func (p *Parser) peak() Token {
+	return p.scanned[p.tPos]
+}
+
 func (p *Parser) rewind() {
 	p.tPos--
 }
@@ -32,8 +36,8 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 	switch t.ttype {
 	case Point:
 		return p.parsePoint()
-	//case Linestring:
-	//	return p.parseLineString()
+	case Linestring:
+		return p.parseLineString()
 	//case Polygon:
 	//	return p.parsePolygon()
 	//case Multipoint:
@@ -52,25 +56,33 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 	switch t.ttype {
 	case Empty:
 		point = orb.Point{0, 0}
-		t = p.pop()
-		if t.ttype != Eof {
-			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
-		}
-		return point, nil
+		goto EofParse
 	case Z:
 		t := p.pop()
+		if t.ttype == Empty {
+			point = orb.Point{0, 0}
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
 			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
 		}
 		point, err = p.parseZCoord()
 	case M:
 		t := p.pop()
+		if t.ttype == Empty {
+			point = orb.Point{0, 0}
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
 			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
 		}
 		point, err = p.parseMCoord()
 	case ZM:
 		t := p.pop()
+		if t.ttype == Empty {
+			point = orb.Point{0, 0}
+			goto EofParse
+		}
 		if t.ttype != LeftParen {
 			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
 		}
@@ -89,6 +101,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 	if t.ttype != RightParen {
 		return point, fmt.Errorf("unexpected token on pos %d", t.pos)
 	}
+EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
 		return point, fmt.Errorf("unexpected token on pos %d", t.pos)
@@ -97,33 +110,92 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 	return point, nil
 }
 
-//func (p *Parser) parseLineString() (line orb.LineString, err error) {
-//	line = make([]orb.Point, 0)
-//	t := p.pop()
-//	switch t.ttype {
-//	case Empty:
-//	case Z:
-//		point, err = p.parseZCoord()
-//	case M:
-//		point, err = p.parseMCoord()
-//	case ZM:
-//		point, err = p.parseZMCoord()
-//	case Float:
-//		p.rewind()
-//		point, err = p.parseCoord(t)
-//	}
-//
-//	if err != nil {
-//		return line, err
-//	}
-//
-//	t := p.pop()
-//	if t.ttype != Eof {
-//		return line, fmt.Errorf("unexpected token on pos %d", t.pos)
-//	}
-//
-//	return line, nil
-//}
+func (p *Parser) parseLineString() (line orb.LineString, err error) {
+	line = make([]orb.Point, 0)
+	t := p.pop()
+	switch t.ttype {
+	case Empty:
+	case Z:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		var point orb.Point
+		for {
+			t := p.peak()
+			if t.ttype == RightParen {
+				break
+			}
+			point, err = p.parseZCoord()
+			if err != nil {
+				return line, err
+			}
+			line = append(line, point)
+		}
+	case M:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		var point orb.Point
+		for {
+			t := p.peak()
+			if t.ttype == RightParen {
+				break
+			}
+			point, err = p.parseMCoord()
+			if err != nil {
+				return line, err
+			}
+			line = append(line, point)
+		}
+	case ZM:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		var point orb.Point
+		for {
+			t := p.peak()
+			if t.ttype == RightParen {
+				break
+			}
+			point, err = p.parseZMCoord()
+			if err != nil {
+				return line, err
+			}
+			line = append(line, point)
+		}
+	case LeftParen:
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+		}
+		var point orb.Point
+		for {
+			t := p.peak()
+			if t.ttype == RightParen {
+				break
+			}
+			point, err = p.parseCoord()
+			if err != nil {
+				return line, err
+			}
+			line = append(line, point)
+		}
+	}
+
+	if err != nil {
+		return line, err
+	}
+
+	t = p.pop()
+	if t.ttype != Eof {
+		return line, fmt.Errorf("unexpected token on pos %d", t.pos)
+	}
+
+	return line, nil
+}
 
 func (p *Parser) parseCoord() (point orb.Point, err error) {
 	t1 := p.pop()
