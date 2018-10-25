@@ -76,3 +76,41 @@ func Test_parseLine(t *testing.T) {
 		}
 	}
 }
+
+func Test_parsePolygon(t *testing.T) {
+	inputs := []string{
+		"polygon empty",
+		"polygon z empty",
+		"polygon m empty",
+		"polygon zm empty",
+		"polygon (( 10 10, 10 20, 20 20, 20 15, 10 10))",
+		"polygon z ((10 10 3, 10 20 3, 20 20 3, 20 15 4, 10 10 3))",
+		"polygon m (( 10 10 8, 10 20 9, 20 20 9, 20 15 9, 10 10 8 ))",
+		"polygon zm (( 10 10 3 8, 10 20 3 9, 20 20 3 9, 20 15 4 9, 10 10 3 8 ))",
+		"polygon (( 10 10, 10 20, 20 20, 20 15, 10 10),( 10 10, 10 20, 20 20, 20 15, 10 10))",
+	}
+	outputs := []orb.Polygon{
+		orb.Polygon{},
+		orb.Polygon{},
+		orb.Polygon{},
+		orb.Polygon{},
+		orb.Polygon{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}}},
+		orb.Polygon{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}}},
+		orb.Polygon{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}}},
+		orb.Polygon{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}}},
+		orb.Polygon{{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}},
+			{{10.0, 10.0}, {10.0, 20.0}, {20.0, 20.0}, {20.0, 15.0}, {10.0, 10.0}}},
+	}
+
+	for i, str := range inputs {
+		geo, err := Scan(str)
+
+		if err != nil {
+			t.Errorf("unexpected error %s on test %d", err, i)
+		}
+		if !reflect.DeepEqual(geo, outputs[i]) {
+			t.Errorf("incorrect value returned on test %d", i)
+			fmt.Println(geo)
+		}
+	}
+}

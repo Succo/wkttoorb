@@ -29,17 +29,13 @@ func (p *Parser) rewind() {
 
 func (p *Parser) Parse() (orb.Geometry, error) {
 	t := p.pop()
-	if t.ttype < Point || t.ttype > MultiPolygon {
-		return nil, fmt.Errorf("unexpected token on pos %d", t.pos)
-	}
-
 	switch t.ttype {
 	case Point:
 		return p.parsePoint()
 	case Linestring:
 		return p.parseLineString()
-	//case Polygon:
-	//	return p.parsePolygon()
+	case Polygon:
+		return p.parsePolygon()
 	//case Multipoint:
 	//	return p.parseMultipoint()
 	//case MultilineString:
@@ -64,7 +60,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			goto EofParse
 		}
 		if t.ttype != LeftParen {
-			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 		}
 		point, err = p.parseZCoord()
 	case M:
@@ -74,7 +70,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			goto EofParse
 		}
 		if t.ttype != LeftParen {
-			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 		}
 		point, err = p.parseMCoord()
 	case ZM:
@@ -84,13 +80,13 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			goto EofParse
 		}
 		if t.ttype != LeftParen {
-			return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 		}
 		point, err = p.parseZMCoord()
 	case LeftParen:
 		point, err = p.parseCoord()
 	default:
-		return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 	}
 
 	if err != nil {
@@ -99,12 +95,12 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 
 	t = p.pop()
 	if t.ttype != RightParen {
-		return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 	}
 EofParse:
 	t = p.pop()
 	if t.ttype != Eof {
-		return point, fmt.Errorf("unexpected token on pos %d", t.pos)
+		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
 	}
 
 	return point, nil
@@ -130,6 +126,8 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		if err != nil {
 			return line, err
 		}
+	default:
+		return line, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
 	if err != nil {
@@ -173,14 +171,70 @@ func (p *Parser) parseLineStringText(ttype tokenType) (line orb.LineString, err 
 	return line, nil
 }
 
+func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
+	poly = make([]orb.Ring, 0)
+	t := p.pop()
+	switch t.ttype {
+	case Empty:
+		goto EofParse
+	case Z, M, ZM:
+		t1 := p.pop()
+		if t1.ttype == Empty {
+			goto EofParse
+		}
+		if t1.ttype != LeftParen {
+			return poly, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
+		}
+		fallthrough
+	case LeftParen:
+		poly, err = p.parsePolygonText(t.ttype)
+		if err != nil {
+			return poly, err
+		}
+	default:
+		return poly, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
+	}
+
+EofParse:
+	t = p.pop()
+	if t.ttype != Eof {
+		return poly, fmt.Errorf("unexpected token %s on pos %d, expected Eof", t.lexeme, t.pos)
+	}
+
+	return poly, nil
+}
+
+func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error) {
+	poly = make([]orb.Ring, 0)
+	var line orb.LineString
+	for {
+		t := p.pop()
+		if t.ttype != LeftParen {
+			return poly, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
+		}
+		line, err = p.parseLineStringText(ttype)
+		if err != nil {
+			return poly, err
+		}
+		poly = append(poly, orb.Ring(line))
+		t = p.pop()
+		if t.ttype == RightParen {
+			break
+		} else if t.ttype != Comma {
+			return poly, fmt.Errorf("unexpected token %s on pos %d expected ','", t.lexeme, t.pos)
+		}
+	}
+	return poly, nil
+}
+
 func (p *Parser) parseCoord() (point orb.Point, err error) {
 	t1 := p.pop()
 	if t1.ttype != Float {
-		return point, fmt.Errorf("unexpected token on pos %d", t1.pos)
+		return point, fmt.Errorf("parse coordinates unexpected token %s on pos %d", t1.lexeme, t1.pos)
 	}
 	t2 := p.pop()
 	if t2.ttype != Float {
-		return point, fmt.Errorf("unexpected token on pos %d", t2.pos)
+		return point, fmt.Errorf("parse coordinates unexpected token %s on pos %d", t1.lexeme, t2.pos)
 	}
 
 	c1, err := strconv.ParseFloat(t1.lexeme, 64)
