@@ -19,14 +19,6 @@ func (p *Parser) pop() Token {
 	return t
 }
 
-func (p *Parser) peak() Token {
-	return p.scanned[p.tPos]
-}
-
-func (p *Parser) rewind() {
-	p.tPos--
-}
-
 func (p *Parser) Parse() (orb.Geometry, error) {
 	t := p.pop()
 	switch t.ttype {
