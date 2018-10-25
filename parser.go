@@ -287,7 +287,10 @@ func (p *Parser) parseZCoord() (point orb.Point, err error) {
 	}
 
 	// drop the last value Z coordinates are not really supported
-	p.pop()
+	t := p.pop()
+	if t.ttype != Float {
+		return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
+	}
 
 	return point, nil
 }
@@ -299,7 +302,10 @@ func (p *Parser) parseMCoord() (point orb.Point, err error) {
 	}
 
 	// drop the last value M values are not really supported
-	p.pop()
+	t := p.pop()
+	if t.ttype != Float {
+		return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
+	}
 
 	return point, nil
 }
@@ -312,8 +318,12 @@ func (p *Parser) parseZMCoord() (point orb.Point, err error) {
 
 	// drop the last value M values
 	// and Z coordinates are not really supported
-	p.pop()
-	p.pop()
+	for i := 0; i < 2; i++ {
+		t := p.pop()
+		if t.ttype != Float {
+			return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
+		}
+	}
 
 	return point, nil
 }
