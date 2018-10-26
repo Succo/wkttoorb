@@ -106,7 +106,7 @@ func (l *Lexer) scanFloat(r rune) string {
 	var buf bytes.Buffer
 	buf.WriteRune(r)
 	r = l.read()
-	for unicode.IsDigit(r) || r == '.' || r == '-' {
+	for isFloatRune(r) {
 		buf.WriteRune(r)
 		r = l.read()
 	}
@@ -154,7 +154,7 @@ func (l *Lexer) scanToken() (bool, error) {
 		default:
 			return false, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
 		}
-	case r == '-', unicode.IsNumber(r):
+	case isFloatRune(r):
 		w := l.scanFloat(r)
 		l.addToken(Float, w)
 	case r == eof:
@@ -164,6 +164,10 @@ func (l *Lexer) scanToken() (bool, error) {
 		return false, fmt.Errorf("Unexpected rune %s on character %d", string(r), l.pos)
 	}
 	return true, nil
+}
+
+func isFloatRune(r rune) bool {
+	return r == '-' || r == '.' || unicode.IsNumber(r)
 }
 
 func (l *Lexer) Scan() error {
