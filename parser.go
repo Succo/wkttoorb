@@ -124,8 +124,8 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 
 func (p *Parser) parseLineStringText(ttype tokenType) (line orb.LineString, err error) {
 	line = make([]orb.Point, 0)
-	var point orb.Point
 	for {
+		var point orb.Point
 		switch ttype {
 		case Z:
 			point, err = p.parseZCoord()
@@ -183,8 +183,8 @@ func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
 
 func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error) {
 	poly = make([]orb.Ring, 0)
-	var line orb.LineString
 	for {
+		var line orb.LineString
 		t := p.pop()
 		if t.ttype != LeftParen {
 			return poly, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
@@ -237,8 +237,8 @@ func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
 
 func (p *Parser) parseMultiPolygonText(ttype tokenType) (multi orb.MultiPolygon, err error) {
 	multi = make([]orb.Polygon, 0)
-	var poly orb.Polygon
 	for {
+		var poly orb.Polygon
 		t := p.pop()
 		if t.ttype != LeftParen {
 			return multi, fmt.Errorf("unexpected token %s on pos %d expected '('", t.lexeme, t.pos)
