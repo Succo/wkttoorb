@@ -41,7 +41,7 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 	case MultiPolygon:
 		return p.parseMultiPolygon()
 	default:
-		return nil, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
+		return nil, fmt.Errorf("Parse unexpected token %s on pos %d expected geometry type", t.lexeme, t.pos)
 	}
 }
 
@@ -57,7 +57,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			break
 		}
 		if t1.ttype != LeftParen {
-			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
+			return point, fmt.Errorf("parse point unexpected token %s on pos %d", t.lexeme, t.pos)
 		}
 		fallthrough
 	case LeftParen:
@@ -77,15 +77,15 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 
 		t = p.pop()
 		if t.ttype != RightParen {
-			return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
+			return point, fmt.Errorf("parse point unexpected token %s on pos %d expected )", t.lexeme, t.pos)
 		}
 	default:
-		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
+		return point, fmt.Errorf("parse point unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
 	t = p.pop()
 	if t.ttype != Eof {
-		return point, fmt.Errorf("parse point unexpected token on pos %d", t.pos)
+		return point, fmt.Errorf("parse point unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
 	return point, nil
@@ -270,11 +270,11 @@ func (p *Parser) parseCoord() (point orb.Point, err error) {
 
 	c1, err := strconv.ParseFloat(t1.lexeme, 64)
 	if err != nil {
-		return point, errors.Wrap(err, fmt.Sprintf("invalid lexeme for token on pos %d", t1.pos))
+		return point, errors.Wrap(err, fmt.Sprintf("invalid lexeme %s for token on pos %d", t1.lexeme, t1.pos))
 	}
 	c2, err := strconv.ParseFloat(t2.lexeme, 64)
 	if err != nil {
-		return point, errors.Wrap(err, fmt.Sprintf("invalid lexeme for token on pos %d", t2.pos))
+		return point, errors.Wrap(err, fmt.Sprintf("invalid lexeme %s for token on pos %d", t2.lexeme, t2.pos))
 	}
 
 	return orb.Point{c1, c2}, nil
