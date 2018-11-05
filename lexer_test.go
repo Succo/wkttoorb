@@ -18,6 +18,7 @@ func Test_scanToken(t *testing.T) {
 		"12",
 		",",
 		"-23",
+		"5e-05",
 	}
 
 	outputs := []Token{
@@ -32,6 +33,7 @@ func Test_scanToken(t *testing.T) {
 		{ttype: Float, lexeme: "12"},
 		{ttype: Comma, lexeme: ","},
 		{ttype: Float, lexeme: "-23"},
+		{ttype: Float, lexeme: "5e-05"},
 	}
 
 	for i, input := range inputs {

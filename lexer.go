@@ -154,7 +154,7 @@ func (l *Lexer) scanToken() (bool, error) {
 		default:
 			return false, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
 		}
-	case isFloatRune(r):
+	case beginFloat(r):
 		w := l.scanFloat(r)
 		l.addToken(Float, w)
 	case r == eof:
@@ -166,8 +166,12 @@ func (l *Lexer) scanToken() (bool, error) {
 	return true, nil
 }
 
-func isFloatRune(r rune) bool {
+func beginFloat(r rune) bool {
 	return r == '-' || r == '.' || unicode.IsNumber(r)
+}
+
+func isFloatRune(r rune) bool {
+	return beginFloat(r) || r == 'e'
 }
 
 func (l *Lexer) Scan() error {
