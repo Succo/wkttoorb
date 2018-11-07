@@ -122,6 +122,7 @@ func (l *Lexer) scanToken() (bool, error) {
 	switch {
 	case unicode.IsSpace(r):
 		l.pos++
+		return l.scanToken()
 	case r == '(':
 		l.addToken(LeftParen, "(")
 	case r == ')':
