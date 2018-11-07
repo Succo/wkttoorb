@@ -47,24 +47,22 @@ type Token struct {
 }
 
 type Lexer struct {
-	reader  *bufio.Reader
-	scanned []Token
+	reader *bufio.Reader
 
 	pos int
 }
 
 func NewLexer(reader io.Reader) *Lexer {
 	return &Lexer{
-		reader:  bufio.NewReader(reader),
-		scanned: make([]Token, 0),
+		reader: bufio.NewReader(reader),
 	}
 }
 
-// addToken add a parsed token to the token list
-func (l *Lexer) addToken(ttype tokenType, lexeme string) {
+// getToken add a parsed token to the token list
+func (l *Lexer) getToken(ttype tokenType, lexeme string) Token {
 	t := Token{ttype, lexeme, l.pos}
-	l.scanned = append(l.scanned, t)
 	l.pos += len(lexeme)
+	return t
 }
 
 func (l *Lexer) read() rune {
@@ -117,54 +115,52 @@ func (l *Lexer) scanFloat(r rune) string {
 // scanToken scans the next lexeme
 // return false is eof is reached true otherwise
 // error is non nil only in case of unexpected character or word
-func (l *Lexer) scanToken() (bool, error) {
+func (l *Lexer) scanToken() (Token, error) {
 	r := l.read()
 	switch {
 	case unicode.IsSpace(r):
 		l.pos++
 		return l.scanToken()
 	case r == '(':
-		l.addToken(LeftParen, "(")
+		return l.getToken(LeftParen, "("), nil
 	case r == ')':
-		l.addToken(RightParen, ")")
+		return l.getToken(RightParen, ")"), nil
 	case r == ',':
-		l.addToken(Comma, ",")
+		return l.getToken(Comma, ","), nil
 	case unicode.IsLetter(r):
 		w := l.scanToLowerWord(r)
 		switch w {
 		case "empty":
-			l.addToken(Empty, "empty")
+			return l.getToken(Empty, "empty"), nil
 		case "z":
-			l.addToken(Z, "z")
+			return l.getToken(Z, "z"), nil
 		case "m":
-			l.addToken(M, "m")
+			return l.getToken(M, "m"), nil
 		case "zm":
-			l.addToken(ZM, "zm")
+			return l.getToken(ZM, "zm"), nil
 		case "point":
-			l.addToken(Point, "point")
+			return l.getToken(Point, "point"), nil
 		case "linestring":
-			l.addToken(Linestring, "linestring")
+			return l.getToken(Linestring, "linestring"), nil
 		case "polygon":
-			l.addToken(Polygon, "polygon")
+			return l.getToken(Polygon, "polygon"), nil
 		case "multipoint":
-			l.addToken(Multipoint, "multipoint")
+			return l.getToken(Multipoint, "multipoint"), nil
 		case "multilinestring":
-			l.addToken(MultilineString, "multilinestring")
+			return l.getToken(MultilineString, "multilinestring"), nil
 		case "multipolygon":
-			l.addToken(MultiPolygon, "multipolygon")
+			return l.getToken(MultiPolygon, "multipolygon"), nil
 		default:
-			return false, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
+			return Token{}, fmt.Errorf("Unexpected word %s on character %d", w, l.pos)
 		}
 	case beginFloat(r):
 		w := l.scanFloat(r)
-		l.addToken(Float, w)
+		return l.getToken(Float, w), nil
 	case r == eof:
-		l.addToken(Eof, "")
-		return false, nil
+		return l.getToken(Eof, ""), nil
 	default:
-		return false, fmt.Errorf("Unexpected rune %s on character %d", string(r), l.pos)
+		return Token{}, fmt.Errorf("Unexpected rune %s on character %d", string(r), l.pos)
 	}
-	return true, nil
 }
 
 func beginFloat(r rune) bool {
@@ -173,17 +169,4 @@ func beginFloat(r rune) bool {
 
 func isFloatRune(r rune) bool {
 	return beginFloat(r) || r == 'e'
-}
-
-func (l *Lexer) Scan() error {
-	for {
-		ok, err := l.scanToken()
-		switch {
-		case ok:
-		case err != nil:
-			return err
-		default:
-			return nil
-		}
-	}
 }

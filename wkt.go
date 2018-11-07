@@ -8,7 +8,7 @@ import (
 )
 
 func Scan(s string) (orb.Geometry, error) {
-	p := Parser{NewLexer(strings.NewReader(s)), 0}
+	p := Parser{NewLexer(strings.NewReader(s))}
 
 	geo, err := p.Parse()
 	if err != nil {

@@ -10,17 +10,11 @@ import (
 
 type Parser struct {
 	*Lexer
-	tPos int
 }
 
 func (p *Parser) pop() (Token, error) {
-	_, err := p.scanToken()
-	if err != nil {
-		return Token{}, err
-	}
-	t := p.scanned[p.tPos]
-	p.tPos++
-	return t, nil
+	t, err := p.scanToken()
+	return t, err
 }
 
 func (p *Parser) Parse() (orb.Geometry, error) {
