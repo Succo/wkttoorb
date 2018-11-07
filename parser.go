@@ -12,13 +12,8 @@ type Parser struct {
 	*Lexer
 }
 
-func (p *Parser) pop() (Token, error) {
-	t, err := p.scanToken()
-	return t, err
-}
-
 func (p *Parser) Parse() (orb.Geometry, error) {
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +42,7 @@ func (p *Parser) Parse() (orb.Geometry, error) {
 }
 
 func (p *Parser) parsePoint() (point orb.Point, err error) {
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return point, err
 	}
@@ -55,7 +50,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 	case Empty:
 		point = orb.Point{0, 0}
 	case Z, M, ZM:
-		t1, err := p.pop()
+		t1, err := p.scanToken()
 		if err != nil {
 			return point, err
 		}
@@ -80,7 +75,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 			return point, err
 		}
 
-		t, err = p.pop()
+		t, err = p.scanToken()
 		if err != nil {
 			return point, err
 		}
@@ -92,7 +87,7 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 		return point, fmt.Errorf("parse point unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-	t, err = p.pop()
+	t, err = p.scanToken()
 	if err != nil {
 		return point, err
 	}
@@ -105,14 +100,14 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 
 func (p *Parser) parseLineString() (line orb.LineString, err error) {
 	line = make([]orb.Point, 0)
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return nil, err
 	}
 	switch t.ttype {
 	case Empty:
 	case Z, M, ZM:
-		t1, err := p.pop()
+		t1, err := p.scanToken()
 		if err != nil {
 			return line, err
 		}
@@ -132,7 +127,7 @@ func (p *Parser) parseLineString() (line orb.LineString, err error) {
 		return line, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-	t, err = p.pop()
+	t, err = p.scanToken()
 	if err != nil {
 		return line, err
 	}
@@ -159,7 +154,7 @@ func (p *Parser) parseLineStringText(ttype tokenType) (line orb.LineString, err 
 			return line, err
 		}
 		line = append(line, point)
-		t, err := p.pop()
+		t, err := p.scanToken()
 		if err != nil {
 			return line, err
 		}
@@ -174,14 +169,14 @@ func (p *Parser) parseLineStringText(ttype tokenType) (line orb.LineString, err 
 
 func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
 	poly = make([]orb.Ring, 0)
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return poly, err
 	}
 	switch t.ttype {
 	case Empty:
 	case Z, M, ZM:
-		t1, err := p.pop()
+		t1, err := p.scanToken()
 		if err != nil {
 			return poly, err
 		}
@@ -201,7 +196,7 @@ func (p *Parser) parsePolygon() (poly orb.Polygon, err error) {
 		return poly, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-	t, err = p.pop()
+	t, err = p.scanToken()
 	if err != nil {
 		return poly, err
 	}
@@ -216,7 +211,7 @@ func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error)
 	poly = make([]orb.Ring, 0)
 	for {
 		var line orb.LineString
-		t, err := p.pop()
+		t, err := p.scanToken()
 		if err != nil {
 			return poly, err
 		}
@@ -228,7 +223,7 @@ func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error)
 			return poly, err
 		}
 		poly = append(poly, orb.Ring(line))
-		t, err = p.pop()
+		t, err = p.scanToken()
 		if err != nil {
 			return poly, err
 		}
@@ -243,14 +238,14 @@ func (p *Parser) parsePolygonText(ttype tokenType) (poly orb.Polygon, err error)
 
 func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
 	multi = make([]orb.Polygon, 0)
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return multi, err
 	}
 	switch t.ttype {
 	case Empty:
 	case Z, M, ZM:
-		t1, err := p.pop()
+		t1, err := p.scanToken()
 		if err != nil {
 			return multi, err
 		}
@@ -270,7 +265,7 @@ func (p *Parser) parseMultiPolygon() (multi orb.MultiPolygon, err error) {
 		return multi, fmt.Errorf("unexpected token %s on pos %d", t.lexeme, t.pos)
 	}
 
-	t, err = p.pop()
+	t, err = p.scanToken()
 	if err != nil {
 		return multi, err
 	}
@@ -285,7 +280,7 @@ func (p *Parser) parseMultiPolygonText(ttype tokenType) (multi orb.MultiPolygon,
 	multi = make([]orb.Polygon, 0)
 	for {
 		var poly orb.Polygon
-		t, err := p.pop()
+		t, err := p.scanToken()
 		if err != nil {
 			return multi, err
 		}
@@ -297,7 +292,7 @@ func (p *Parser) parseMultiPolygonText(ttype tokenType) (multi orb.MultiPolygon,
 			return multi, err
 		}
 		multi = append(multi, poly)
-		t, err = p.pop()
+		t, err = p.scanToken()
 		if err != nil {
 			return multi, err
 		}
@@ -311,14 +306,14 @@ func (p *Parser) parseMultiPolygonText(ttype tokenType) (multi orb.MultiPolygon,
 }
 
 func (p *Parser) parseCoord() (point orb.Point, err error) {
-	t1, err := p.pop()
+	t1, err := p.scanToken()
 	if err != nil {
 		return point, err
 	}
 	if t1.ttype != Float {
 		return point, fmt.Errorf("parse coordinates unexpected token %s on pos %d", t1.lexeme, t1.pos)
 	}
-	t2, err := p.pop()
+	t2, err := p.scanToken()
 	if err != nil {
 		return point, err
 	}
@@ -345,7 +340,7 @@ func (p *Parser) parseCoordDrop1() (point orb.Point, err error) {
 	}
 
 	// drop the last value Z or M coordinates are not really supported
-	t, err := p.pop()
+	t, err := p.scanToken()
 	if err != nil {
 		return point, err
 	}
@@ -365,7 +360,7 @@ func (p *Parser) parseCoordDrop2() (point orb.Point, err error) {
 	// drop the last value M values
 	// and Z coordinates are not really supported
 	for i := 0; i < 2; i++ {
-		t, err := p.pop()
+		t, err := p.scanToken()
 		if err != nil {
 			return point, err
 		}
