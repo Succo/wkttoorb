@@ -69,12 +69,10 @@ func (p *Parser) parsePoint() (point orb.Point, err error) {
 		fallthrough
 	case LeftParen:
 		switch t.ttype { // reswitch on the type because of the fallthrough
-		case Z:
-			point, err = p.parseZCoord()
-		case M:
-			point, err = p.parseMCoord()
+		case Z, M:
+			point, err = p.parseCoordDrop1()
 		case ZM:
-			point, err = p.parseZMCoord()
+			point, err = p.parseCoordDrop2()
 		default:
 			point, err = p.parseCoord()
 		}
@@ -150,12 +148,10 @@ func (p *Parser) parseLineStringText(ttype tokenType) (line orb.LineString, err 
 	for {
 		var point orb.Point
 		switch ttype {
-		case Z:
-			point, err = p.parseZCoord()
-		case M:
-			point, err = p.parseMCoord()
+		case Z, M:
+			point, err = p.parseCoordDrop1()
 		case ZM:
-			point, err = p.parseZMCoord()
+			point, err = p.parseCoordDrop2()
 		default:
 			point, err = p.parseCoord()
 		}
@@ -342,43 +338,25 @@ func (p *Parser) parseCoord() (point orb.Point, err error) {
 	return orb.Point{c1, c2}, nil
 }
 
-func (p *Parser) parseZCoord() (point orb.Point, err error) {
+func (p *Parser) parseCoordDrop1() (point orb.Point, err error) {
 	point, err = p.parseCoord()
 	if err != nil {
 		return point, err
 	}
 
-	// drop the last value Z coordinates are not really supported
+	// drop the last value Z or M coordinates are not really supported
 	t, err := p.pop()
 	if err != nil {
 		return point, err
 	}
 	if t.ttype != Float {
-		return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
+		return point, fmt.Errorf("parseCoordDrop1 unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
 	}
 
 	return point, nil
 }
 
-func (p *Parser) parseMCoord() (point orb.Point, err error) {
-	point, err = p.parseCoord()
-	if err != nil {
-		return point, err
-	}
-
-	// drop the last value M values are not really supported
-	t, err := p.pop()
-	if err != nil {
-		return point, err
-	}
-	if t.ttype != Float {
-		return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
-	}
-
-	return point, nil
-}
-
-func (p *Parser) parseZMCoord() (point orb.Point, err error) {
+func (p *Parser) parseCoordDrop2() (point orb.Point, err error) {
 	point, err = p.parseCoord()
 	if err != nil {
 		return point, err
@@ -392,7 +370,7 @@ func (p *Parser) parseZMCoord() (point orb.Point, err error) {
 			return point, err
 		}
 		if t.ttype != Float {
-			return point, fmt.Errorf("parseZCoord unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
+			return point, fmt.Errorf("parseCoordDrop2 unexpected token %s on pos %d expected Float", t.lexeme, t.pos)
 		}
 	}
 
