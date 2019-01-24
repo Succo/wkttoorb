@@ -1,4 +1,4 @@
-package wktToOrb
+package wkttoorb
 
 import (
 	"bufio"
